@@ -1,35 +1,15 @@
 <!DOCTYPE html>
-<title>Parkour Pro 3000</title>
-<link rel="stylesheet" href="styles.css">
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <html>
+<head>
+  <title>Parkour Pro 3000</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head> 
 <body>
-  <div class="hud" id="hud">Height: 0.0</div>
-  <div id="canvas-container"></div>
-      <h1 id="title" class="center"><em>Parkour Pro 3000</em></h1>
-      <button class="center" id="btn-start">Start</button>
-      <button class="center" id="btn-controls">Controls</button>
-      <button class="center" id="btn-full">Fullscreen</button>
-      <br>
-      <br>
-      <br>
-      <br>
-      <br>
-      <br>
-      <br>
-      <br>
-      <br>
-      <br>
-      <br>
-      <p class="center" id="credits">By owenJEEJ</p>
-  <div id="pause-menu" class="overlay" style="display:none;">
-    <div class="menu">
-      <h1>Gepauzeerd</h1>
-      <button id="btn-resume" class="btn">Resume</button>
-      <button id="btn-restart" class="btn">Restart</button>
-      <button id="btn-main" class="btn secondary">Main Menu</button>
-    </div>
-  </div>
-  <script type="module" src="game.js"></script>
+  <h1 class="center" id="title"><em>Parkour Pro 3000</em></h1>
+  <button class="center button" id="btn-start" onclick="location.href='game.html'">Start</button>
+  <button class="center button" id="btn-controls" onclick="alert('WASD: Move\nSpace: Jump\nEsc: Pause\nF: Fullscreen')">Controls</button>
+  <button class="center button" id="btn-fullscreen" onclick="document.documentElement.requestFullscreen()">Fullscreen</button>
+  <p class="center" id="credits"><strong>By owenJEEJ</strong></p>
 </body>
 </html>

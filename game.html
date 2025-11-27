@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Parkour Pro 3000 – Game</title>
+  <link rel="stylesheet" href="gamestyles.css">
+</head>
+
+<body>
+  <div id="hud">Height: 0.0</div>
+  <div id="canvas-container"></div>
+
+  <div id="pause-menu" class="overlay" style="display:none;">
+    <div class="menu">
+      <h1>Paused</h1>
+      <button id="btn-resume">Resume</button>
+      <button id="btn-restart">Restart</button>
+      <button id="btn-exit" onclick="location.href='index.html'">Main Menu</button>
+    </div>
+  </div>
+
+  <script type="module" src="game.js"></script>
+</body>
+</html>
