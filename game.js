@@ -6,10 +6,10 @@ const pauseMenu = document.getElementById('pause-menu');
 
 /* --- Kleuren --- */
 const COLOR_SKY       = 0x6fb7ff;
-const COLOR_GROUND    = 0x2ee890;
-const COLOR_PLATFORM  = 0x6fe28c;
-const COLOR_SPAWNPLAT = 0x80f0a0;
-const COLOR_PLAYER    = 0xff7777;
+const COLOR_GROUND    = 0x595959;
+const COLOR_PLATFORM  = 0x49ff3a;
+const COLOR_SPAWNPLAT = 0xf8ff00;
+const COLOR_PLAYER    = 0xff0000;
 const COLOR_LIGHT_DIR = 0xffffff;
 const COLOR_LIGHT_AMB = 0xffffff;
 
@@ -43,28 +43,63 @@ function initScene() {
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(container.clientWidth, container.clientHeight);
   renderer.setClearColor(COLOR_SKY);
+
+  /* SCHADUW FIXES */
+  renderer.physicallyCorrectLights = true;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
   container.appendChild(renderer.domElement);
 
-  const dir = new THREE.DirectionalLight(COLOR_LIGHT_DIR, 1.0);
+  /* Directional Light */
+  const dir = new THREE.DirectionalLight(COLOR_LIGHT_DIR, 2.5);
   dir.position.set(5, 10, 7);
+  dir.castShadow = true;
+
+  dir.shadow.mapSize.width = 2048;
+  dir.shadow.mapSize.height = 2048;
+
+  dir.shadow.camera.near = 1;
+  dir.shadow.camera.far = 50;
+  dir.shadow.camera.left = -30;
+  dir.shadow.camera.right = 30;
+  dir.shadow.camera.top = 30;
+  dir.shadow.camera.bottom = -30;
+
   scene.add(dir);
 
-  const amb = new THREE.AmbientLight(COLOR_LIGHT_AMB, 0.45);
+  const amb = new THREE.AmbientLight(COLOR_LIGHT_AMB, 0.35);
   scene.add(amb);
 
+  /* Ground */
   const groundGeo = new THREE.BoxGeometry(200, 2, 200);
-  const groundMat = new THREE.MeshLambertMaterial({ color: COLOR_GROUND });
+  const groundMat = new THREE.MeshStandardMaterial({
+    color: COLOR_GROUND,
+    roughness: 0.9,
+    metalness: 0.0
+  });
+
   const ground = new THREE.Mesh(groundGeo, groundMat);
   ground.position.set(0, -120, 0);
+  ground.receiveShadow = true;
   scene.add(ground);
 }
 
 /* Platforms */
 function addPlatform(x, y, z, w=3, h=0.5, d=3, color=COLOR_PLATFORM) {
   const geo = new THREE.BoxGeometry(w, h, d);
-  const mat = new THREE.MeshLambertMaterial({ color });
+  const mat = new THREE.MeshStandardMaterial({
+    color,
+    roughness: 0.9,
+    metalness: 0.0
+  });
+
   const mesh = new THREE.Mesh(geo, mat);
   mesh.position.set(x, y, z);
+
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+
   scene.add(mesh);
   platforms.push({ mesh, x, y, z, w, h, d });
   return platforms[platforms.length - 1];
@@ -89,10 +124,10 @@ function generatePlatforms(baseY=0) {
 }
 
 function addNextPlatform(prev) {
-  const maxXDist = 6;    // max horizontale sprong
+  const maxXDist = 6;
   const maxZDist = 6;
-  const minYDist = 2;    // min hoogteverschil
-  const maxYDist = 3.5;  // max haalbare hoogteverschil
+  const minYDist = 2;
+  const maxYDist = 3.5;
 
   const x = prev.x + (Math.random()*2 - 1) * maxXDist;
   const z = prev.z + (Math.random()*2 - 1) * maxZDist;
@@ -107,8 +142,17 @@ function addNextPlatform(prev) {
 function makePlayer() {
   const spawnPlatform = platforms.length > 0 ? platforms[0] : ensureSpawnPlatform();
   const geo = new THREE.BoxGeometry(0.6, 1.0, 0.6);
-  const mat = new THREE.MeshLambertMaterial({ color: COLOR_PLAYER });
+  const mat = new THREE.MeshStandardMaterial({
+    color: COLOR_PLAYER,
+    roughness: 0.8,
+    metalness: 0.0
+  });
+
   const mesh = new THREE.Mesh(geo, mat);
+
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+
   scene.add(mesh);
 
   const startY = spawnPlatform.y + spawnPlatform.h/2 + 1.0/2;
@@ -260,7 +304,7 @@ function animate() {
   camera.position.lerp(target, 0.15);
   camera.lookAt(new THREE.Vector3(player.x, player.y + 0.9, player.z));
 
-  hud.textContent = `Y: ${player.y.toFixed(1)} | Platforms: ${platforms.length}`;
+  hud.textContent = `Height: ${player.y.toFixed(1)}`;
   renderer.render(scene, camera);
 }
 
