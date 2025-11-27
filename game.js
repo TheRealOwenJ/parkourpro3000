@@ -72,7 +72,7 @@ function initScene() {
   scene.add(amb);
 
   /* Ground */
-  const groundGeo = new THREE.BoxGeometry(200, 2, 200);
+  const groundGeo = new THREE.BoxGeometry(1500, 2, 1500);
   const groundMat = new THREE.MeshStandardMaterial({
     color: COLOR_GROUND,
     roughness: 0.9,
