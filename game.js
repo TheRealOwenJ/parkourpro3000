@@ -4,6 +4,15 @@ const container = document.getElementById('canvas-container');
 const hud = document.getElementById('hud');
 const pauseMenu = document.getElementById('pause-menu');
 
+/* --- Kleuren --- */
+const COLOR_SKY       = 0x6fb7ff;
+const COLOR_GROUND    = 0x2ee890;
+const COLOR_PLATFORM  = 0x6fe28c;
+const COLOR_SPAWNPLAT = 0x80f0a0;
+const COLOR_PLAYER    = 0xff7777;
+const COLOR_LIGHT_DIR = 0xffffff;
+const COLOR_LIGHT_AMB = 0xffffff;
+
 let scene, camera, renderer;
 let player, platforms = [];
 let keys = {};
@@ -23,7 +32,7 @@ function aabbIntersect(ax, ay, az, aw, ah, ad, bx, by, bz, bw, bh, bd) {
 /* Scene setup */
 function initScene() {
   scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x6fb7ff, 0.0025);
+  scene.fog = new THREE.FogExp2(COLOR_SKY, 0.0025);
 
   const aspect = container.clientWidth / container.clientHeight;
   camera = new THREE.PerspectiveCamera(60, aspect, 0.1, 2000);
@@ -33,71 +42,89 @@ function initScene() {
 
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(container.clientWidth, container.clientHeight);
-  renderer.setClearColor(0x6fb7ff);
-
+  renderer.setClearColor(COLOR_SKY);
   container.appendChild(renderer.domElement);
 
-  const dir = new THREE.DirectionalLight(0xffffff, 1.0);
+  const dir = new THREE.DirectionalLight(COLOR_LIGHT_DIR, 1.0);
   dir.position.set(5, 10, 7);
   scene.add(dir);
 
-  const amb = new THREE.AmbientLight(0xffffff, 0.45);
+  const amb = new THREE.AmbientLight(COLOR_LIGHT_AMB, 0.45);
   scene.add(amb);
 
   const groundGeo = new THREE.BoxGeometry(200, 2, 200);
-  const groundMat = new THREE.MeshLambertMaterial({ color: 0x2e8b57 });
+  const groundMat = new THREE.MeshLambertMaterial({ color: COLOR_GROUND });
   const ground = new THREE.Mesh(groundGeo, groundMat);
   ground.position.set(0, -120, 0);
   scene.add(ground);
 }
 
-/* Player */
-function makePlayer() {
-  const geo = new THREE.BoxGeometry(0.6, 1.0, 0.6);
-  const mat = new THREE.MeshLambertMaterial({ color: 0xff3333 });
-  const mesh = new THREE.Mesh(geo, mat);
-  scene.add(mesh);
-
-  return {
-    mesh,
-    x: 0, y: 6, z: 0,
-    w: 0.6, h: 1.0, d: 0.6,
-    vel: new THREE.Vector3(0, 0, 0),
-    speed: 15.0,
-    jumpPower: 20.0,
-    onGround: false
-  };
-}
-
 /* Platforms */
-function addPlatform(x, y, z, w=3, h=0.5, d=3, color=0x2fbf4f) {
+function addPlatform(x, y, z, w=3, h=0.5, d=3, color=COLOR_PLATFORM) {
   const geo = new THREE.BoxGeometry(w, h, d);
   const mat = new THREE.MeshLambertMaterial({ color });
   const mesh = new THREE.Mesh(geo, mat);
   mesh.position.set(x, y, z);
   scene.add(mesh);
   platforms.push({ mesh, x, y, z, w, h, d });
+  return platforms[platforms.length - 1];
 }
 
 function ensureSpawnPlatform() {
-  addPlatform(0, 5, 0, 4, 0.6, 4, 0x3aa04a);
+  return addPlatform(0, 5, 0, 4, 0.6, 4, COLOR_SPAWNPLAT);
 }
 
+/* Genereer platforms binnen bereik van speler */
 function generatePlatforms(baseY=0) {
   platforms.forEach(p => scene.remove(p.mesh));
   platforms = [];
 
-  ensureSpawnPlatform();
+  const spawn = ensureSpawnPlatform();
+  let prev = spawn;
 
-  let y = baseY + 3.0;
-  for (let i=0;i<platformCount;i++) {
-    const x = (Math.random()-0.5) * 12;
-    const z = (Math.random()-0.5) * 20;
-    const w = 2 + Math.random() * 3;
-    const d = 2 + Math.random() * 3;
-    addPlatform(x, y, z, w, 0.5, d, 0x2fbf4f);
-    y += 2.5 + Math.random() * 2.0;
+  for (let i = 0; i < platformCount; i++) {
+    prev = addNextPlatform(prev);
   }
+  return spawn;
+}
+
+function addNextPlatform(prev) {
+  const maxXDist = 6;    // max horizontale sprong
+  const maxZDist = 6;
+  const minYDist = 2;    // min hoogteverschil
+  const maxYDist = 3.5;  // max haalbare hoogteverschil
+
+  const x = prev.x + (Math.random()*2 - 1) * maxXDist;
+  const z = prev.z + (Math.random()*2 - 1) * maxZDist;
+  const y = prev.y + minYDist + Math.random() * (maxYDist - minYDist);
+  const w = 2 + Math.random() * 3;
+  const d = 2 + Math.random() * 3;
+
+  return addPlatform(x, y, z, w, 0.5, d);
+}
+
+/* Player */
+function makePlayer() {
+  const spawnPlatform = platforms.length > 0 ? platforms[0] : ensureSpawnPlatform();
+  const geo = new THREE.BoxGeometry(0.6, 1.0, 0.6);
+  const mat = new THREE.MeshLambertMaterial({ color: COLOR_PLAYER });
+  const mesh = new THREE.Mesh(geo, mat);
+  scene.add(mesh);
+
+  const startY = spawnPlatform.y + spawnPlatform.h/2 + 1.0/2;
+
+  return {
+    mesh,
+    x: spawnPlatform.x,
+    y: startY,
+    z: spawnPlatform.z,
+    w: 0.6, h: 1.0, d: 0.6,
+    vel: new THREE.Vector3(0, 0, 0),
+    speed: 15.0,
+    jumpPower: 20.0,
+    onGround: false,
+    squash: 0
+  };
 }
 
 /* Resize */
@@ -118,11 +145,8 @@ window.addEventListener('keyup', (e) => keys[e.code] = false);
 
 /* Fullscreen */
 function toggleFullscreen() {
-  if (!document.fullscreenElement) {
-    container.requestFullscreen().catch(()=>{});
-  } else {
-    document.exitFullscreen().catch(()=>{});
-  }
+  if (!document.fullscreenElement) container.requestFullscreen().catch(()=>{});
+  else document.exitFullscreen().catch(()=>{});
 }
 
 /* Pause Menu */
@@ -132,19 +156,16 @@ document.getElementById('btn-restart').onclick = () => restartGame();
 function togglePause(forceState) {
   if (typeof forceState === 'boolean') paused = forceState;
   else paused = !paused;
-
   pauseMenu.style.display = paused ? 'flex' : 'none';
-
-  if (!paused) {
-    lastTime = performance.now();
-    animate();
-  }
+  if (!paused) lastTime = performance.now(), animate();
 }
 
 /* Restart */
 function restartGame() {
-  generatePlatforms();
-  player.x = 0; player.y = 6; player.z = 0;
+  const spawn = generatePlatforms();
+  player.x = spawn.x;
+  player.y = spawn.y + spawn.h/2 + player.h/2;
+  player.z = spawn.z;
   player.vel.set(0,0,0);
   player.onGround = false;
 }
@@ -170,15 +191,13 @@ function animate() {
 
   const moveDir = new THREE.Vector3(strafe, 0, forward);
   if (moveDir.lengthSq() > 0.0001) moveDir.normalize();
-
   const control = player.onGround ? 1.0 : 0.6;
   player.vel.x = moveDir.x * player.speed * control;
   player.vel.z = moveDir.z * player.speed * control;
 
-  if (keys['Space'] && player.onGround) {
-    player.vel.y = player.jumpPower;
-    player.onGround = false;
-  }
+  /* Squash / jump */
+  player.squash += (player.onGround ? (1 - player.squash) * 0.2 : (0 - player.squash) * 0.15);
+  if (keys['Space'] && player.onGround) player.vel.y = player.jumpPower, player.onGround = false;
 
   player.vel.y -= gravity * dt;
   player.x += player.vel.x * dt;
@@ -187,14 +206,11 @@ function animate() {
 
   /* Collision */
   player.onGround = false;
-
   for (let p of platforms) {
     if (aabbIntersect(player.x,player.y,player.z,player.w,player.h,player.d,
                       p.x,p.y,p.z,p.w,p.h,p.d)) {
-
       const playerFeet = player.y - player.h/2;
       const platformTop = p.y + p.h/2;
-
       if (player.vel.y <= 0 && playerFeet <= platformTop + 0.1) {
         player.y = platformTop + player.h/2;
         player.vel.y = 0;
@@ -205,30 +221,28 @@ function animate() {
 
   /* Fall reset */
   if (player.y < -60) {
-    const highest = Math.max(...platforms.map(p=>p.y));
-    player.x = 0; player.z = 0; player.y = highest + 5;
+    const spawnPlatform = platforms[0];
+    player.x = spawnPlatform.x;
+    player.y = spawnPlatform.y + spawnPlatform.h/2 + player.h/2;
+    player.z = spawnPlatform.z;
     player.vel.set(0,0,0);
+    player.onGround = false;
   }
 
   /* Platform recycling */
   const below = player.y - 30;
   for (let i = platforms.length - 1; i >= 0; i--) {
-    if (platforms[i].y < below) {
-      scene.remove(platforms[i].mesh);
-      platforms.splice(i,1);
-    }
-  }
-  while (platforms.length < platformCount) {
-    const highest = Math.max(...platforms.map(p=>p.y));
-    const x = (Math.random()-0.5) * 14;
-    const z = (Math.random()-0.5) * 24;
-    const y = highest + (2.2 + Math.random()*3.2);
-    const w = 2 + Math.random()*3;
-    const d = 2 + Math.random()*3;
-    addPlatform(x, y, z, w, 0.5, d);
+    if (platforms[i].y < below) scene.remove(platforms[i].mesh), platforms.splice(i,1);
   }
 
-  /* Apply positions */
+  while (platforms.length < platformCount) {
+    const highest = Math.max(...platforms.map(p=>p.y));
+    addNextPlatform(platforms.reduce((a,b)=>a.y>b.y?a:b));
+  }
+
+  /* Apply positions & squash */
+  const squashScale = 1 - 0.2 * player.squash;
+  player.mesh.scale.set(1 + 0.1 * player.squash, squashScale, 1 + 0.1 * player.squash);
   player.mesh.position.set(player.x, player.y, player.z);
   platforms.forEach(p => p.mesh.position.set(p.x,p.y,p.z));
 
@@ -242,17 +256,11 @@ function animate() {
     -camOffset.x * sinY + camOffset.z * cosY
   );
 
-  const target = new THREE.Vector3(
-    player.x + rotated.x,
-    player.y + rotated.y,
-    player.z + rotated.z
-  );
-
+  const target = new THREE.Vector3(player.x + rotated.x, player.y + rotated.y, player.z + rotated.z);
   camera.position.lerp(target, 0.15);
   camera.lookAt(new THREE.Vector3(player.x, player.y + 0.9, player.z));
 
   hud.textContent = `Y: ${player.y.toFixed(1)} | Platforms: ${platforms.length}`;
-
   renderer.render(scene, camera);
 }
 
