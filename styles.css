@@ -1,0 +1,113 @@
+/* --- Body en fullscreen setup --- */
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: lightblue; /* oude body kleur */
+}
+
+/* --- Canvas container --- */
+#canvas-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0; /* canvas achter alles */
+}
+
+/* --- HUD --- */
+.hud {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 10; /* boven canvas */
+    font-family: 'Press Start 2P', Arial, sans-serif;
+    color: black;
+}
+
+/* --- Overlay / pause menu --- */
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10; /* boven canvas */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.menu {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    font-family: 'Press Start 2P', Arial, sans-serif;
+}
+
+/* --- Title --- */
+#title {
+    font-size: 48px;
+    background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
+    font-family: 'Press Start 2P', Arial, sans-serif;
+    background-clip: text;
+    color: transparent;
+    position: absolute;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+}
+
+/* --- Buttons --- */
+#btn-start {
+    background-color: yellow;
+}
+
+#btn-controls {
+    background-color: orange;
+}
+
+#btn-full {
+    background-color: red;
+}
+
+#btn-start, #btn-controls, #btn-full {
+    display: block;
+    border: none;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    width: 200px;
+    height: 50px;
+    font-size: 15px;
+    font-family: 'Press Start 2P', Arial, sans-serif;
+    cursor: pointer;
+    color: black;
+    position: relative; /* buttons in mainMenu div */
+    z-index: 10;
+}
+
+/* --- Centering helper --- */
+.center {
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* --- Credits --- */
+#credits {
+    font-family: 'Press Start 2P', Arial, sans-serif;
+    font-size: 12px;
+    margin-top: 20px;
+    color: black;
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+}
