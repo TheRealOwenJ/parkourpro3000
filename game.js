@@ -212,6 +212,7 @@ function restartGame() {
   player.z = spawn.z;
   player.vel.set(0,0,0);
   player.onGround = false;
+  togglePause(false);
 }
 
 /* GAME START */
