@@ -43,15 +43,6 @@ body {
     cursor: pointer;
 }
 
-#btn-fullscreen {
-    background-color: #f44336; /* Red */
-    color: white;
-    border: none;
-    border-radius: 12px;
-    font-size: 20px;
-    cursor: pointer;
-}
-
 #credits {
     font-size: 20px;
     color: #555;
